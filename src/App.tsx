@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft, ArrowRight, BookOpen, CalendarClock, Check, CheckCircle2, ChevronRight,
-  CircleHelp, Code2, Database, GraduationCap, LayoutDashboard, LockKeyhole,
+  CircleHelp, Code2, GraduationCap, LayoutDashboard, LockKeyhole,
   RotateCcw, Sparkles, Target, Trophy,
 } from 'lucide-react'
 import { LEVELS as FOUNDATION_LEVELS, SKILL_LABELS } from './content/levels'
@@ -780,7 +780,7 @@ function App() {
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <button type="button" className="brand" onClick={() => setView('home')}><span className="brand-icon"><Database size={24} strokeWidth={2.4} /></span><span>SQL <b>LAND</b><small>Practice makes progress</small></span></button>
+      <button type="button" className="brand" onClick={() => setView('home')}><span className="brand-icon"><svg width="26" height="26" viewBox="10 8 44 48" fill="none" aria-hidden="true" strokeWidth={7} strokeLinecap="round" strokeLinejoin="round"><path d="M18 15v33h29" stroke="#fff" /><path d="M30 15v21h17" stroke="#c9c1ff" /></svg></span><span>SQL <b>LAND</b><small>Practice makes progress</small></span></button>
       <div className="sidebar-label">WORKSPACE</div>
       <nav className="main-nav" aria-label="Main navigation"><button type="button" className={view === 'home' || view === 'lesson' ? 'active' : ''} onClick={() => setView('home')}><LayoutDashboard size={19} /> Learning path</button><button type="button" className={view === 'review' || view === 'reviewSession' ? 'active' : ''} onClick={() => setView('review')}><RotateCcw size={19} /> Review skills</button></nav>
       <div className="sidebar-label levels-label">YOUR LEVELS</div>

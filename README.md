@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.svg" width="96" height="96" alt="SQL Land logo">
+</p>
+
 # SQL Land
 
 A local-first PostgreSQL practice app. Work through short rule cards, solve varied questions across 16 levels, pass level exams, and revisit skills from the Review screen.

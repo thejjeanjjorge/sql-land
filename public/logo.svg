@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="SQL Land logo">
+  <rect width="64" height="64" rx="16" fill="#5544c8"/>
+  <path d="M18 15v33h29" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 15v21h17" stroke="#c9c1ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
