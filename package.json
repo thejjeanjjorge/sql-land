@@ -1,0 +1,28 @@
+{
+  "name": "sql-land",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --configLoader runner",
+    "build": "tsc -b && vite build --configLoader runner",
+    "preview": "vite preview --configLoader runner",
+    "test": "node --test src/engine/compare.test.mjs src/progress.test.mjs src/content/parameterize.test.mjs src/content/ruleMatcher.test.mjs && node src/content/validate.mjs"
+  },
+  "dependencies": {
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@electric-sql/pglite": "^0.3.14",
+    "@uiw/react-codemirror": "^4.23.13",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.0"
+  }
+}
