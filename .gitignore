@@ -20,3 +20,6 @@ Thumbs.db
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# Marker written by the Mac launcher after it sets its Finder icon
+.icon-set

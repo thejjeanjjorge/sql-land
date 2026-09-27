@@ -2,6 +2,11 @@
 # Double-click in Finder to start SQL Land on macOS.
 cd "$(dirname "$0")" || exit 1
 
+# Show the SQL Land logo on this file in Finder (once; harmless if it fails).
+if [ -f logo.png ] && [ ! -f .icon-set ]; then
+  osascript -l JavaScript -e 'ObjC.import("AppKit"); const dir = $.NSFileManager.defaultManager.currentDirectoryPath.js; $.NSWorkspace.sharedWorkspace.setIconForFileOptions($.NSImage.alloc.initWithContentsOfFile(dir + "/logo.png"), dir + "/Start SQL Land.command", 0)' >/dev/null 2>&1 && touch .icon-set
+fi
+
 pause_and_exit() {
   read -n 1 -s -r -p "Press any key to close this window."
   echo

@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="public/logo.svg" width="96" height="96" alt="SQL Land logo">
+  <img src="logo.png" width="128" height="128" alt="SQL Land logo">
 </p>
 
-# SQL Land
+<h1 align="center">SQL Land</h1>
+
+<p align="center"><b>Practice makes progress.</b></p>
 
 A local-first PostgreSQL practice app. Work through short rule cards, solve varied questions across 16 levels, pass level exams, and revisit skills from the Review screen.
 
@@ -19,6 +21,13 @@ A local-first PostgreSQL practice app. Work through short rule cards, solve vari
    - **Mac:** `Start SQL Land.command`. The first time, macOS may block it: right-click it, choose **Open**, then **Open** again.
 
 The first run sets things up, which takes a minute. After that, the app opens in your browser. Keep the launcher window open while you practice, and close it to stop SQL Land.
+
+### Add SQL Land to your desktop
+
+- **Windows:** double-click `Create Desktop Shortcut.bat`. A **SQL Land** shortcut with the logo appears on your desktop. Keep the SQL Land folder where it is, since the shortcut points to it.
+- **Mac:** after the first launch, `Start SQL Land.command` shows the SQL Land logo in Finder. Drag it to the right side of your Dock, next to the Trash, for one-click access.
+
+The logo files are in the project folder: `logo.png`, `SQL Land.ico` (Windows icon) and `public/logo.svg`.
 
 Progress is saved in the browser you use, so the online version and your own copy each keep their own progress.
 
