@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "start": "vite --configLoader runner --open",
     "dev": "vite --configLoader runner",
     "build": "tsc -b && vite build --configLoader runner",
     "preview": "vite preview --configLoader runner",

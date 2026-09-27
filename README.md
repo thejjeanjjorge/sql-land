@@ -6,16 +6,30 @@
 
 A local-first PostgreSQL practice app. Work through short rule cards, solve varied questions across 16 levels, pass level exams, and revisit skills from the Review screen.
 
-## Run it
+## Open it
 
-Requires Node.js 20.19+ (or 22.12+).
+**In your browser, nothing to install:** https://thejjeanjjorge.github.io/sql-land/
+
+## Run your own copy
+
+1. Install [Node.js](https://nodejs.org) (the LTS version, 20.19 or newer).
+2. Download this repo: the green **Code** button → **Download ZIP**, then unzip it. Or use `git clone`.
+3. Double-click the launcher in the folder:
+   - **Windows:** `Start SQL Land.bat`
+   - **Mac:** `Start SQL Land.command`. The first time, macOS may block it: right-click it, choose **Open**, then **Open** again.
+
+The first run sets things up, which takes a minute. After that, the app opens in your browser. Keep the launcher window open while you practice, and close it to stop SQL Land.
+
+Progress is saved in the browser you use, so the online version and your own copy each keep their own progress.
+
+### From a terminal
 
 ```bash
 npm install
-npm run dev
+npm start
 ```
 
-Open the local URL printed by Vite. To verify the production build and curriculum:
+`npm start` opens the app in your browser. To verify the production build and curriculum:
 
 ```bash
 npm test
