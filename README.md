@@ -31,3 +31,7 @@ npm run build
 Curriculum files live in [`src/content`](src/content), with instructions in [`src/content/README.md`](src/content/README.md). Each fixture is a complete PostgreSQL schema and data script; each question has a reference query or marked choice. Run `npm test` after changing content to validate every question against both fixtures.
 
 The app code is in `src/App.tsx`, the reusable question interface in `src/QuestionPlayer.tsx`, and the worker-based SQL engine in `src/engine`.
+
+## Credits
+
+SQL Land was made in collaboration with [Claude](https://claude.ai) by Anthropic. The lesson content was researched from open source material.
