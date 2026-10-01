@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { PostgreSQL, sql } from '@codemirror/lang-sql'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { monoEditorTheme } from './editorTheme'
 import {
   ArrowRight,
   Check,
@@ -543,7 +543,7 @@ export default function QuestionPlayer({
           <CodeMirror
             value={query}
             height="210px"
-            theme={oneDark}
+            theme={monoEditorTheme}
             extensions={extensions}
             editable={!isFrozen}
             onChange={(value) => { setQuery(value); setFeedback(null) }}
