@@ -16,8 +16,10 @@
     "@codemirror/view": "^6.43.13",
     "@electric-sql/pglite": "^0.3.14",
     "@lezer/highlight": "^1.2.5",
+    "@motion-for-agents/react": "github:thejjeanjjorge/motion-for-agents#785e790d241815e66aa8b838cdf6b86a855fa108",
     "@uiw/react-codemirror": "^4.23.13",
     "lucide-react": "^0.468.0",
+    "motion": "^13.5.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

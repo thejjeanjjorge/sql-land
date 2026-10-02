@@ -78,7 +78,8 @@ button svg { flex: none; }
 .sidebar-progress-top strong { color: var(--accent); font-size: 12px; }
 .sidebar-progress-track, .progress-track { overflow: hidden; height: 7px; border-radius: 8px; background: var(--line); }
 .sidebar-progress-track { margin-top: 13px; }
-.sidebar-progress-track > span, .progress-track > span { display: block; height: 100%; border-radius: inherit; background: var(--ink); transition: width .3s; }
+/* MotionProgress scales the fill; the track's rounded overflow clips it. */
+.sidebar-progress-fill, .progress-fill { height: 100%; background: var(--ink); }
 .sidebar-footer p { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
 
 .main-column { display: flex; min-width: 0; flex-direction: column; }
@@ -195,6 +196,7 @@ h1, h2, h3 { font-family: Geist, system-ui, sans-serif; }
 .challenge-progress span { flex: 1; height: 6px; border-radius: 8px; background: var(--line); }
 .challenge-progress span.active { background: var(--ink); }
 .challenge-layout { display: grid; grid-template-columns: minmax(0, 1fr) 258px; align-items: start; gap: 19px; }
+.question-motion { min-width: 0; }
 .question-card, .schema-panel { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: none; }
 .question-card { padding: 26px; }
 .question-topline { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -233,7 +235,7 @@ h1, h2, h3 { font-family: Geist, system-ui, sans-serif; }
 .feedback-box.incorrect { border: 1px solid var(--line); color: var(--text); background: var(--surface); }
 .feedback-box.neutral { border: 1px solid var(--line); color: var(--muted); background: var(--surface); }
 .hint-box > svg, .feedback-box > svg, .feedback-icon { flex: none; margin-top: 1px; }
-.feedback-icon { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--on-ink); background: currentColor; }
+.feedback-icon { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; color: var(--on-ink); background: var(--ink); }
 .feedback-icon svg { color: var(--on-ink); }
 .hint-box strong, .feedback-box strong { display: block; font-size: 12px; }
 .hint-box p, .feedback-box p { margin: 3px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }

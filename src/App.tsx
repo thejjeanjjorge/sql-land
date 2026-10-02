@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useIsPresent } from 'motion/react'
+import {
+  MotionButton, MotionCelebration, MotionProgress, MotionReveal, MotionSwitch,
+} from '@motion-for-agents/react'
 import {
   ArrowLeft, ArrowRight, BookOpen, CalendarClock, Check, CheckCircle2, ChevronRight,
   CircleHelp, Code2, GraduationCap, LayoutDashboard, LockKeyhole,
@@ -229,6 +233,16 @@ function statusForSkill(progress: Progress, skill: SkillId) {
   }[status]
 }
 
+/**
+ * MotionSwitch keeps the outgoing page on screen while it fades out. Making it inert
+ * stops a quick second click from running that page's action twice (for example,
+ * counting one exam as two attempts).
+ */
+function ExitGuard({ children }: { children: ReactNode }) {
+  const isPresent = useIsPresent()
+  return <div inert={!isPresent}>{children}</div>
+}
+
 function LevelIcon({ level, passed, locked }: { level: Level; passed: boolean; locked: boolean }) {
   return <span className={`level-icon ${passed ? 'passed' : locked ? 'locked' : 'active'}`}>
     {passed ? <Check size={21} /> : locked ? <LockKeyhole size={19} /> : <span>{String(level.number).padStart(2, '0')}</span>}
@@ -405,9 +419,8 @@ function App() {
           <div className="hero-tag">LEARN · PRACTICE · MASTER</div>
           <h1>Make SQL practice <em>stick.</em></h1>
           <p>Short lessons, different ways to solve, and a clear path forward. Practice a little, learn a lot.</p>
-          <button
+          <MotionButton
             className="hero-button"
-            type="button"
             onClick={() => {
               if (dueCount > 0) startMixedReview()
               else if (allPassed) setView('review')
@@ -421,7 +434,7 @@ function App() {
                 : completedCount
                   ? 'Continue learning'
                   : 'Start learning'} <ArrowRight size={19} />
-          </button>
+          </MotionButton>
         </div>
         <div className="hero-visual" aria-hidden="true">
           <div className="floating-sql-card"><span>SQL QUEST</span><code>SELECT <b>confidence</b><br />FROM practice<br />WHERE effort = <i>'daily'</i>;</code><div className="floating-card-bottom"><span className="green-pulse" /> query complete</div></div>
@@ -443,14 +456,19 @@ function App() {
           const locked = isLocked(level)
           const passed = progress.passedLevelIds.includes(level.id)
           const solved = level.exercises.filter((question) => progress.completedExerciseIds.includes(question.id)).length
-          return <button key={level.id} className={`level-card ${locked ? 'is-locked' : ''} ${passed ? 'is-passed' : ''}`} type="button" onClick={() => openLevel(level)} disabled={locked}>
+          return <MotionButton
+            key={level.id}
+            className={`level-card ${locked ? 'is-locked' : ''} ${passed ? 'is-passed' : ''}`}
+            onClick={() => openLevel(level)}
+            disabled={locked}
+          >
             <div className="level-card-top"><LevelIcon level={level} passed={passed} locked={locked} /><span className={`level-status ${passed ? 'passed' : locked ? 'locked' : 'available'}`}>{passed ? 'Passed' : locked ? 'Locked' : solved ? 'In progress' : 'Ready to start'}</span></div>
             <h3>{level.title}</h3><p>{level.subtitle}</p>
             <div className="level-card-footer">
               <span>{level.exercises.length} practices · {examQuestionCount(level)} exam questions</span>
               <ChevronRight size={19} />
             </div>
-          </button>
+          </MotionButton>
         })}
       </div>
 
@@ -464,9 +482,25 @@ function App() {
       <div className="lesson-breadcrumb"><button type="button" onClick={() => setView('home')}><ArrowLeft size={16} /> Learning path</button><ChevronRight size={16} /><span>Level {selectedLevel.number}</span></div>
       <div className="lesson-heading"><span className="level-label">LEVEL {String(selectedLevel.number).padStart(2, '0')} · QUICK LESSON</span><h1>{selectedLevel.title}</h1><p>{selectedLevel.subtitle}</p></div>
       <div className="rules-progress"><span>Learn the rules</span><span>{ruleIndex + 1} of {selectedLevel.rules.length}</span></div>
-      <div className="progress-track"><span style={{ width: `${((ruleIndex + 1) / selectedLevel.rules.length) * 100}%` }} /></div>
-      <article className="rule-card"><div className="rule-icon"><BookOpen size={25} /></div><h2>{rule.title}</h2><p>{rule.body}</p>{rule.example && <div className="rule-example"><span>EXAMPLE</span><pre>{rule.example}</pre></div>}</article>
-      <div className="rule-navigation"><button type="button" className="secondary-button" disabled={ruleIndex === 0} onClick={() => setRuleIndex(ruleIndex - 1)}><ArrowLeft size={17} /> Previous</button><div className="rule-dots">{selectedLevel.rules.map((_, index) => <span key={index} className={index === ruleIndex ? 'active' : ''} />)}</div><button type="button" className="primary-button" onClick={() => ruleIndex + 1 < selectedLevel.rules.length ? setRuleIndex(ruleIndex + 1) : startPractice()}>{ruleIndex + 1 < selectedLevel.rules.length ? 'Next rule' : 'Start practice'} <ArrowRight size={17} /></button></div>
+      <MotionProgress
+        value={((ruleIndex + 1) / selectedLevel.rules.length) * 100}
+        label="Rules read"
+        trackClassName="progress-track"
+        fillClassName="progress-fill"
+      />
+      {/* The rule card holds no state, so it can safely remount on each step. */}
+      <MotionSwitch transitionKey={ruleIndex}>
+        <article className="rule-card"><div className="rule-icon"><BookOpen size={25} /></div><h2>{rule.title}</h2><p>{rule.body}</p>{rule.example && <div className="rule-example"><span>EXAMPLE</span><pre>{rule.example}</pre></div>}</article>
+      </MotionSwitch>
+      <div className="rule-navigation">
+        <MotionButton className="secondary-button" disabled={ruleIndex === 0} onClick={() => setRuleIndex(ruleIndex - 1)}>
+          <ArrowLeft size={17} /> Previous
+        </MotionButton>
+        <div className="rule-dots">{selectedLevel.rules.map((_, index) => <span key={index} className={index === ruleIndex ? 'active' : ''} />)}</div>
+        <MotionButton className="primary-button" onClick={() => ruleIndex + 1 < selectedLevel.rules.length ? setRuleIndex(ruleIndex + 1) : startPractice()}>
+          {ruleIndex + 1 < selectedLevel.rules.length ? 'Next rule' : 'Start practice'} <ArrowRight size={17} />
+        </MotionButton>
+      </div>
       {hasStartedLevel(progress, selectedLevel) && (
         <div className="skip-rules-row">
           <button type="button" className="text-button" onClick={() => resumeLevel(selectedLevel)}>
@@ -495,15 +529,17 @@ function App() {
         )}
       </div>
       {!isExam && showLevelRules && (
-        <section className="level-rules-panel" aria-label={`Level ${selectedLevel.number} rules`}>
-          {selectedLevel.rules.map((rule) => (
-            <div className="level-rule" key={rule.title}>
-              <strong>{rule.title}</strong>
-              <p>{rule.body}</p>
-              {rule.example && <pre>{rule.example}</pre>}
-            </div>
-          ))}
-        </section>
+        <MotionReveal>
+          <section className="level-rules-panel" aria-label={`Level ${selectedLevel.number} rules`}>
+            {selectedLevel.rules.map((rule) => (
+              <div className="level-rule" key={rule.title}>
+                <strong>{rule.title}</strong>
+                <p>{rule.body}</p>
+                {rule.example && <pre>{rule.example}</pre>}
+              </div>
+            ))}
+          </section>
+        </MotionReveal>
       )}
       <div className="challenge-header">
         <div>
@@ -522,23 +558,25 @@ function App() {
       </div>
       <div className="challenge-progress">{Array.from({ length: total }, (_, index) => <span key={index} className={index < number ? 'active' : ''} />)}</div>
       <div className="challenge-layout">
-        <QuestionPlayer
-          key={`${phase}-${question.id}-${examRound}`}
-          question={question}
-          mode={isExam ? 'exam' : 'practice'}
-          number={number}
-          total={total}
-          onAttempt={(correct) => {
-            recordQuestionAttempt(question.skill, correct, isExam ? undefined : question.id, !isExam)
-            if (!correct && !isExam && question.kind === 'choose') {
-              queueQuestionForReview(question.id)
-            }
-          }}
-          onContinue={(correct, answer) => isExam
-            ? advanceExam(correct, answer) : advancePractice(correct)}
-          onReveal={isExam ? undefined : () => queueQuestionForReview(question.id)}
-          ruleCandidates={isExam ? undefined : ruleCandidatesFor(question.id)}
-        />
+        {/* Each question already gets a fresh player; the reveal only animates its arrival. */}
+        <MotionReveal key={`${phase}-${question.id}-${examRound}`} className="question-motion">
+          <QuestionPlayer
+            question={question}
+            mode={isExam ? 'exam' : 'practice'}
+            number={number}
+            total={total}
+            onAttempt={(correct) => {
+              recordQuestionAttempt(question.skill, correct, isExam ? undefined : question.id, !isExam)
+              if (!correct && !isExam && question.kind === 'choose') {
+                queueQuestionForReview(question.id)
+              }
+            }}
+            onContinue={(correct, answer) => isExam
+              ? advanceExam(correct, answer) : advancePractice(correct)}
+            onReveal={isExam ? undefined : () => queueQuestionForReview(question.id)}
+            ruleCandidates={isExam ? undefined : ruleCandidatesFor(question.id)}
+          />
+        </MotionReveal>
         <SchemaPanel />
       </div>
     </>
@@ -568,15 +606,15 @@ function App() {
           </p>
         )}
         <div className="result-actions">
-          <button type="button" className="primary-button" onClick={startExam}>
+          <MotionButton className="primary-button" onClick={startExam}>
             Start level exam <ArrowRight size={18} />
-          </button>
-          <button type="button" className="secondary-button" onClick={() => startPractice()}>
+          </MotionButton>
+          <MotionButton className="secondary-button" onClick={() => startPractice()}>
             Practice again
-          </button>
-          <button type="button" className="secondary-button" onClick={() => { setRuleIndex(0); setPhase('rules') }}>
+          </MotionButton>
+          <MotionButton className="secondary-button" onClick={() => { setRuleIndex(0); setPhase('rules') }}>
             Review rules
-          </button>
+          </MotionButton>
         </div>
       </div>
     </div>
@@ -589,7 +627,12 @@ function App() {
     return <div className="lesson-narrow">
       <div className="lesson-breadcrumb"><button type="button" onClick={() => setView('home')}><ArrowLeft size={16} /> Learning path</button><ChevronRight size={16} /><span>Exam result</span></div>
       <div className={`exam-result-card ${examResult.passed ? 'success' : 'retry'}`}>
-        <span className="exam-icon">{examResult.passed ? <Trophy size={35} /> : <RotateCcw size={33} />}</span>
+        {examResult.passed ? (
+          // Passing a level is a rare milestone, so the trophy gets the livelier preset.
+          <MotionReveal preset="celebration" className="exam-icon"><Trophy size={35} /></MotionReveal>
+        ) : (
+          <span className="exam-icon"><RotateCcw size={33} /></span>
+        )}
         <span className="level-label">{examResult.passed ? 'LEVEL PASSED' : 'KEEP PRACTICING'}</span>
         <h1>{examResult.passed ? 'You did it!' : 'One more try?'}</h1>
         <p>
@@ -599,21 +642,21 @@ function App() {
         </p>
         <div className="result-actions">
           {examResult.passed && upcoming ? (
-            <button type="button" className="primary-button" onClick={() => openLevel(upcoming)}>
+            <MotionButton className="primary-button" onClick={() => openLevel(upcoming)}>
               Go to level {upcoming.number} <ArrowRight size={18} />
-            </button>
+            </MotionButton>
           ) : examResult.passed ? (
-            <button type="button" className="primary-button" onClick={() => setView('review')}>
+            <MotionButton className="primary-button" onClick={() => setView('review')}>
               Review your skills <ArrowRight size={18} />
-            </button>
+            </MotionButton>
           ) : (
-            <button type="button" className="primary-button" onClick={startExam}>
+            <MotionButton className="primary-button" onClick={startExam}>
               Retry exam <ArrowRight size={18} />
-            </button>
+            </MotionButton>
           )}
-          <button type="button" className="secondary-button" onClick={() => { setRuleIndex(0); setPhase('rules') }}>
+          <MotionButton className="secondary-button" onClick={() => { setRuleIndex(0); setPhase('rules') }}>
             Review rules
-          </button>
+          </MotionButton>
         </div>
       </div>
       <section className="exam-answer-review" aria-label="Exam answer review">
@@ -685,9 +728,9 @@ function App() {
             <span className="leitner-box-pill">Box 4 (mastered 21d): <b>{boxes.box4}</b></span>
           </div>
         </div>
-        <button type="button" className="primary-button" onClick={startMixedReview}>
+        <MotionButton className="primary-button" onClick={startMixedReview}>
           Start mixed review (5 questions) <ArrowRight size={17} />
-        </button>
+        </MotionButton>
       </section>
 
       <div className="section-heading">
@@ -760,23 +803,38 @@ function App() {
       </div>
       <div className="challenge-progress">{reviewQuestions.map((_, index) => <span key={index} className={index <= reviewIndex ? 'active' : ''} />)}</div>
       <div className="challenge-layout">
-        <QuestionPlayer
-          key={`review-${reviewRound}-${question.id}`}
-          question={question}
-          mode="review"
-          number={reviewIndex + 1}
-          total={reviewQuestions.length}
-          onAttempt={(correct) => {
-            recordQuestionAttempt(question.skill, correct, question.id)
-            if (!correct && question.kind === 'choose') queueQuestionForReview(question.id)
-          }}
-          onContinue={advanceReview}
-          ruleCandidates={ruleCandidatesFor(question.id)}
-        />
+        <MotionReveal key={`review-${reviewRound}-${question.id}`} className="question-motion">
+          <QuestionPlayer
+            question={question}
+            mode="review"
+            number={reviewIndex + 1}
+            total={reviewQuestions.length}
+            onAttempt={(correct) => {
+              recordQuestionAttempt(question.skill, correct, question.id)
+              if (!correct && question.kind === 'choose') queueQuestionForReview(question.id)
+            }}
+            onContinue={advanceReview}
+            ruleCandidates={ruleCandidatesFor(question.id)}
+          />
+        </MotionReveal>
         <SchemaPanel onSkip={advanceReview} />
       </div>
     </>
   }
+
+  function renderPage() {
+    if (view === 'home') return renderHome()
+    if (view === 'review') return renderReview()
+    if (view === 'reviewSession') return renderReviewSession()
+    if (phase === 'rules') return renderRules()
+    if (phase === 'practice' || phase === 'exam') return renderExercise()
+    if (phase === 'examIntro') return renderExamIntro()
+    return renderExamResults()
+  }
+
+  // Moving between questions keeps this key, so the schema panel stays open while practicing.
+  const pageKey = view === 'lesson' ? `lesson-${selectedLevel.id}-${phase}` : view
+  const passedPercent = (passedCount / LEVELS.length) * 100
 
   return <div className="app-shell">
     <aside className="sidebar">
@@ -785,9 +843,28 @@ function App() {
       <nav className="main-nav" aria-label="Main navigation"><button type="button" className={view === 'home' || view === 'lesson' ? 'active' : ''} onClick={() => setView('home')}><LayoutDashboard size={19} /> Learning path</button><button type="button" className={view === 'review' || view === 'reviewSession' ? 'active' : ''} onClick={() => setView('review')}><RotateCcw size={19} /> Review skills</button></nav>
       <div className="sidebar-label levels-label">YOUR LEVELS</div>
       <div className="sidebar-levels">{LEVELS.map((level) => { const locked = isLocked(level); const passed = progress.passedLevelIds.includes(level.id); return <button type="button" key={level.id} className={view === 'lesson' && selectedLevel.id === level.id ? 'current' : ''} disabled={locked} onClick={() => openLevel(level)}><span className={`sidebar-level-number ${passed ? 'done' : ''}`}>{passed ? <Check size={14} /> : locked ? <LockKeyhole size={13} /> : level.number}</span><span>{level.title}</span></button> })}</div>
-      <div className="sidebar-footer"><div className="sidebar-progress-top"><span>Your progress</span><strong>{Math.round((passedCount / LEVELS.length) * 100)}%</strong></div><div className="sidebar-progress-track"><span style={{ width: `${(passedCount / LEVELS.length) * 100}%` }} /></div><p>{passedCount} of {LEVELS.length} levels passed</p></div>
+      {/* The sidebar stays mounted, so passedCount only rises when a level is newly passed.
+          Saved progress on page load never fires the burst. */}
+      <MotionCelebration trigger={passedCount} className="sidebar-footer">
+        <div className="sidebar-progress-top"><span>Your progress</span><strong>{Math.round(passedPercent)}%</strong></div>
+        <MotionProgress
+          value={passedPercent}
+          label="Levels passed"
+          trackClassName="sidebar-progress-track"
+          fillClassName="sidebar-progress-fill"
+        />
+        <p>{passedCount} of {LEVELS.length} levels passed</p>
+      </MotionCelebration>
     </aside>
-    <div className="main-column"><header className="topbar"><span><span className="topbar-dot" /> Learn at your own pace</span><span className="saved-indicator"><CheckCircle2 size={16} /> Progress saved on this device</span></header><main className="page-content">{view === 'home' ? renderHome() : view === 'review' ? renderReview() : view === 'reviewSession' ? renderReviewSession() : phase === 'rules' ? renderRules() : phase === 'practice' || phase === 'exam' ? renderExercise() : phase === 'examIntro' ? renderExamIntro() : renderExamResults()}</main><footer className="app-footer"><span>SQL Land · a little practice goes a long way</span><span><CircleHelp size={15} /> PostgreSQL practice</span></footer></div>
+    <div className="main-column">
+      <header className="topbar"><span><span className="topbar-dot" /> Learn at your own pace</span><span className="saved-indicator"><CheckCircle2 size={16} /> Progress saved on this device</span></header>
+      <main className="page-content">
+        <MotionSwitch transitionKey={pageKey}>
+          <ExitGuard>{renderPage()}</ExitGuard>
+        </MotionSwitch>
+      </main>
+      <footer className="app-footer"><span>SQL Land · a little practice goes a long way</span><span><CircleHelp size={15} /> PostgreSQL practice</span></footer>
+    </div>
   </div>
 }
 

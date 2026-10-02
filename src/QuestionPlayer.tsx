@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
+import { MotionButton, MotionFeedback, MotionReveal } from '@motion-for-agents/react'
 import { PostgreSQL, sql } from '@codemirror/lang-sql'
 import { monoEditorTheme } from './editorTheme'
 import {
@@ -282,6 +283,8 @@ export default function QuestionPlayer({
     if (!canSubmit || running || isFrozen) return
     setRunning('check')
     setRunError(null)
+    // Clearing the old verdict lets every check announce and animate its own result.
+    setFeedback(null)
     try {
       if (isChoice) {
         const output = isPredict
@@ -408,12 +411,12 @@ export default function QuestionPlayer({
                 : `View ${predictedTable} table data`}
           </button>
           {showPredictTable && predictTableData && (
-            <div className="predict-table-preview">
+            <MotionReveal className="predict-table-preview">
               <div className="predict-table-caption">
                 Sample rows from <code>{predictedTable}</code>:
               </div>
               <ResultTable result={predictTableData} />
-            </div>
+            </MotionReveal>
           )}
         </div>
       )}
@@ -443,8 +446,7 @@ export default function QuestionPlayer({
       {isChoice ? (
         <div className="choice-list" role="radiogroup" aria-label={isPredict ? 'Predict the result' : isExplain ? 'Explain the query' : 'Choose a SQL query'}>
           {options.map((option) => (
-            <button
-              type="button"
+            <MotionButton
               key={option.id}
               className={`choice-option ${selectedOption === option.id ? 'selected' : ''}`}
               role="radio"
@@ -458,7 +460,7 @@ export default function QuestionPlayer({
               ) : (
                 <code>{'sql' in option ? option.sql : option.label}</code>
               )}
-            </button>
+            </MotionButton>
           ))}
         </div>
       ) : isComplete ? (
@@ -573,63 +575,69 @@ export default function QuestionPlayer({
         )}
         {!isChoice && <button className="text-button" type="button" onClick={handleReset} disabled={Boolean(running) || Boolean(isFrozen)}><RotateCcw size={16} /> Reset</button>}
         <span className="action-spacer" />
-        {!isChoice && <button className="secondary-button" type="button" onClick={handleRun} disabled={!canRun || Boolean(running) || Boolean(isFrozen)}><Play size={16} /> {running === 'run' ? 'Running…' : 'Run query'}</button>}
-        <button
+        {!isChoice && <MotionButton className="secondary-button" onClick={handleRun} disabled={!canRun || Boolean(running) || Boolean(isFrozen)}><Play size={16} /> {running === 'run' ? 'Running…' : 'Run query'}</MotionButton>}
+        <MotionButton
           className="primary-button"
-          type="button"
           onClick={handleCheck}
           disabled={!canSubmit || Boolean(running) || Boolean(isFrozen)}
           title={isAnswer && !answer.trim() ? 'Type the value you found in “Your answer” to check it' : undefined}
         >
           <Check size={17} /> {running === 'check' ? 'Checking…' : 'Check answer'}
-        </button>
+        </MotionButton>
       </div>
 
       {mode === 'practice' && !isChoice && failedChecks >= 3 && !isFrozen && (
-        <div className="solution-offer">
+        <MotionReveal className="solution-offer">
           <p>Stuck after {failedChecks} checks? You can study the answer and revisit this question later.</p>
-          <button className="secondary-button" type="button" onClick={revealSolution}>
+          <MotionButton className="secondary-button" onClick={revealSolution}>
             Show solution
-          </button>
-        </div>
+          </MotionButton>
+        </MotionReveal>
       )}
 
       {showHint && mode !== 'exam' && (
-        <div className="hint-box">
+        <MotionReveal className="hint-box">
           <Lightbulb size={18} />
           <div><strong>A little nudge</strong><p>{question.hint}</p></div>
-        </div>
+        </MotionReveal>
       )}
-      {runError && <div className="feedback-box incorrect"><CircleHelp size={19} /><div><strong>SQL error</strong><p>{runError}</p></div></div>}
+      {runError && (
+        <MotionFeedback kind="error" className="feedback-box incorrect">
+          <CircleHelp size={19} /><div><strong>SQL error</strong><p>{runError}</p></div>
+        </MotionFeedback>
+      )}
       {feedback && (
-        <div className={`feedback-box ${mode === 'exam' ? 'neutral' : feedback.correct ? 'correct' : 'incorrect'}`}>
+        <MotionFeedback
+          kind={mode === 'exam' ? 'info' : feedback.correct ? 'success' : 'error'}
+          className={`feedback-box ${mode === 'exam' ? 'neutral' : feedback.correct ? 'correct' : 'incorrect'}`}
+        >
           <span className="feedback-icon">
             {mode !== 'exam' && feedback.correct ? <Check size={18} /> : <CircleHelp size={18} />}
           </span>
           <div><strong>{feedback.title}</strong><p>{feedback.detail}</p></div>
-        </div>
+        </MotionFeedback>
       )}
-      {relatedRule && !feedback?.correct && <RelatedRuleCard match={relatedRule} />}
+      {relatedRule && !feedback?.correct && <MotionReveal><RelatedRuleCard match={relatedRule} /></MotionReveal>}
 
       {solutionRevealed && question.solutionSql && (
-        <div className="revealed-solution">
+        <MotionReveal className="revealed-solution">
           <strong>Reference query</strong>
           <pre>{question.solutionSql}</pre>
           <p>{question.explanation}</p>
-        </div>
+        </MotionReveal>
       )}
 
       {result && <div className="results-section"><div className="results-heading"><span>Query results</span><small>{result.rows.length} {result.rows.length === 1 ? 'row' : 'rows'}</small></div><ResultTable result={result} /></div>}
 
       {canContinue && (
-        <div className="continue-row">
-          <button className="primary-button" type="button" onClick={continueQuestion}>
+        <MotionReveal className="continue-row">
+          <MotionButton className="primary-button" onClick={continueQuestion}>
             {mode === 'exam' ? number === total ? 'See exam result' : 'Next exam question'
               : mode === 'review' ? number === total ? 'Finish review' : 'Next review'
               : number === total ? 'Finish practice' : 'Next challenge'}
             <ArrowRight size={17} />
-          </button>
-        </div>
+          </MotionButton>
+        </MotionReveal>
       )}
     </section>
   )

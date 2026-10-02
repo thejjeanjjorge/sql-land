@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "preset": "quiet",
+  "reducedMotion": "user",
+  "transitions": [
+    {
+      "id": "page-navigation",
+      "intent": "navigate",
+      "target": "App page content (home, level rules, practice, exam intro, exam, exam results, review)",
+      "trigger": "The view, selected level, or lesson phase changes",
+      "component": "MotionSwitch"
+    },
+    {
+      "id": "rule-steps",
+      "intent": "navigate",
+      "target": "Rule card in the rules phase",
+      "trigger": "Learner presses Previous or Next rule",
+      "component": "MotionSwitch"
+    },
+    {
+      "id": "rules-progress",
+      "intent": "progress",
+      "target": "Rules progress bar",
+      "trigger": "The rule index changes",
+      "component": "MotionProgress"
+    },
+    {
+      "id": "levels-progress",
+      "intent": "progress",
+      "target": "Sidebar levels-passed bar",
+      "trigger": "The passed level count changes after an exam",
+      "component": "MotionProgress"
+    },
+    {
+      "id": "question-arrival",
+      "intent": "reveal",
+      "target": "QuestionPlayer card in practice, exam, and review",
+      "trigger": "The next question is shown (the player was already keyed per question)",
+      "component": "MotionReveal"
+    },
+    {
+      "id": "answer-feedback",
+      "intent": "feedback",
+      "target": "Check result box",
+      "trigger": "Check answer produces a verdict: success when correct, error when not, info in exams",
+      "component": "MotionFeedback"
+    },
+    {
+      "id": "sql-error",
+      "intent": "feedback",
+      "target": "SQL error box",
+      "trigger": "Run query returns a database error",
+      "component": "MotionFeedback"
+    },
+    {
+      "id": "learning-aids",
+      "intent": "reveal",
+      "target": "Hint, level rules panel, related rule card, solution offer, revealed solution, and predict table preview",
+      "trigger": "Learner opens a hint, rules, or table preview, or a wrong answer adds help",
+      "component": "MotionReveal"
+    },
+    {
+      "id": "continue-action",
+      "intent": "reveal",
+      "target": "Continue row under the question",
+      "trigger": "The question is answered correctly, recorded in an exam, or its solution is revealed",
+      "component": "MotionReveal"
+    },
+    {
+      "id": "level-passed-trophy",
+      "intent": "reveal",
+      "target": "Trophy on the exam result card",
+      "trigger": "The exam result card shows a passed level",
+      "component": "MotionReveal"
+    },
+    {
+      "id": "primary-actions",
+      "intent": "press",
+      "target": "Run, Check, Continue, Show solution, answer choices, level cards, and lesson buttons",
+      "trigger": "Learner presses an enabled action",
+      "component": "MotionButton"
+    },
+    {
+      "id": "level-passed-celebration",
+      "intent": "celebrate",
+      "target": "Sidebar progress footer",
+      "trigger": "passedCount increases while the sidebar is mounted, after a level exam is passed",
+      "component": "MotionCelebration"
+    }
+  ],
+  "notes": [
+    "The trophy reveal overrides the preset with celebration; the v1 plan format has no per-transition preset field.",
+    "The CodeMirror editor and the query results table are not animated, so typing and query output stay immediate.",
+    "The page-level MotionSwitch key ignores question changes, so the schema panel keeps its open table while practicing.",
+    "Outgoing pages are made inert while they exit so a double click cannot run a page action twice.",
+    "The sidebar footer is hidden below 900px wide, so phones and tablets get the trophy reveal without particles."
+  ]
+}
