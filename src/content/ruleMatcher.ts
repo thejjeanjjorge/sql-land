@@ -23,10 +23,13 @@ interface Concept {
 /** Every query selects columns, so that family says little about a specific mistake. */
 const FAMILY_WEIGHT: Record<string, number> = { columns: 0.5 }
 
-/** Arithmetic between values, ignoring the * in SELECT *, COUNT(*) and table.*. */
+/**
+ * Arithmetic between values, ignoring the * in SELECT *, COUNT(*) and table.*.
+ * Quoted text has been reduced to '' by now, so a '' can be an operand: DATE '…' - DATE '…'.
+ */
 function hasArithmetic(text: string): boolean {
   const withoutStars = text.replace(/\bSELECT\s+(?:DISTINCT\s+)?\*|\(\s*\*\s*\)|\.\*|,\s*\*/g, ' ')
-  return /[\w)]\s*[-+*/%]\s*[\w(]/.test(withoutStars)
+  return /[\w)']\s*[-+*/%]\s*[\w(']/.test(withoutStars)
 }
 
 const CONCEPTS: Concept[] = [
@@ -86,7 +89,12 @@ const CONCEPTS: Concept[] = [
   { id: 'interval', family: 'dates', sql: /\bINTERVAL\b/, ruleText: /\binterval\b/i },
   { id: 'series', family: 'series', sql: /\bGENERATE_SERIES\b/, ruleText: /\bgenerate_series\b/i },
   { id: 'stringAgg', family: 'strings', sql: /\bSTRING_AGG\b/, ruleText: /\bstring_agg\b/i },
-  { id: 'stringFunction', family: 'strings', sql: /\|\||\b(?:CONCAT|UPPER|LOWER|LENGTH|SUBSTRING|SPLIT_PART|TRIM|REPLACE)\s*\(/ },
+  {
+    id: 'stringFunction',
+    family: 'strings',
+    sql: /\|\||\b(?:CONCAT|UPPER|LOWER|LENGTH|SUBSTRING|SPLIT_PART|TRIM|REPLACE|LEFT|RIGHT)\s*\(/,
+    ruleText: /\b(?:CONCAT|UPPER|LOWER|LENGTH|SUBSTRING|SPLIT_PART|TRIM|REPLACE|LEFT|RIGHT)\s*\(/i,
+  },
 ]
 
 /** Remove comments and quoted text so keywords inside values are not counted. */
@@ -121,8 +129,8 @@ function familiesOf(conceptIds: Iterable<string>): Set<string> {
   return families
 }
 
-/** Families a rule teaches, read from its example SQL and the keywords in its text. */
-function ruleFamilies(rule: RuleChunk): Set<string> {
+/** Concepts a rule teaches, read from its example SQL and the keywords in its text. */
+export function conceptsTaughtBy(rule: RuleChunk): Set<string> {
   const text = `${rule.title} ${rule.body}`
   const fromText = CONCEPTS
     .filter((concept) => {
@@ -130,7 +138,16 @@ function ruleFamilies(rule: RuleChunk): Set<string> {
       return pattern?.test(text)
     })
     .map((concept) => concept.id)
-  return familiesOf([...fromText, ...(rule.example ? sqlConcepts(rule.example, true) : [])])
+  return new Set([...fromText, ...(rule.example ? sqlConcepts(rule.example, true) : [])])
+}
+
+/** Concepts a query needs the learner to know. Every query selects, so SELECT itself is left out. */
+export function conceptsUsedBy(sql: string): Set<string> {
+  return sqlConcepts(sql, true)
+}
+
+function ruleFamilies(rule: RuleChunk): Set<string> {
+  return familiesOf(conceptsTaughtBy(rule))
 }
 
 function overlap(families: Set<string>, covered: Set<string>): number {
@@ -143,6 +160,8 @@ interface ScoredRule {
   candidate: RuleCandidate
   /** How much of the learner's specific mistake the rule covers. */
   diagnostic: number
+  /** How many of the concepts at issue the rule names itself, not just through a shared family. */
+  named: number
 }
 
 /**
@@ -150,8 +169,14 @@ interface ScoredRule {
  *
  * Concepts the reference query uses but the learner's SQL lacks weigh most,
  * then concepts the learner used that the reference does not (DESC instead of
- * ASC, OR instead of AND), then concepts the reference uses at all. Narrower
- * rules win ties over rules that also cover unrelated concepts.
+ * ASC, OR instead of AND), then concepts the reference uses at all. When cards
+ * score the same, the one that names a concept at issue wins (EXTRACT over
+ * date_trunc, INTERSECT over UNION), then the narrower one that covers fewer
+ * unrelated concepts.
+ *
+ * When the learner wrote SQL, a card that names a concept they got wrong beats
+ * one that only shares a family with it (COUNT(*) written for COUNT(column),
+ * DESC for ASC, a blank left where MAX belongs).
  *
  * Rules from the question's own level come first. An earlier level's rule is
  * chosen only when the mistake involves something the current level does not
@@ -165,33 +190,50 @@ export function findRelatedRule(
   if (!candidates.length || !referenceSql.trim()) return null
   const learner = sqlConcepts(learnerSql)
   const reference = sqlConcepts(referenceSql)
-  const missing = familiesOf([...reference].filter((id) => !learner.has(id)))
-  const extra = familiesOf([...learner].filter((id) => !reference.has(id)))
+  const missingIds = [...reference].filter((id) => !learner.has(id))
+  const extraIds = [...learner].filter((id) => !reference.has(id))
+  const missing = familiesOf(missingIds)
+  const extra = familiesOf(extraIds)
   const used = familiesOf(reference)
+  const written = learnerSql.trim().length > 0
+  // Concepts that may explain the mistake. With nothing written, any concept of the answer could be the gap.
+  const atIssue = written ? new Set([...missingIds, ...extraIds]) : reference
 
-  function pickBest(pool: RuleCandidate[]): ScoredRule | null {
+  function pickBest(pool: RuleCandidate[], onlyNaming = false): ScoredRule | null {
     let best: ScoredRule | null = null
     let bestScore = 0
+    let bestNamed = 0
     let bestUnrelated = Infinity
     for (const candidate of pool) {
       const covered = ruleFamilies(candidate.rule)
       const diagnostic = 3 * overlap(missing, covered) + 2 * overlap(extra, covered)
       const score = diagnostic + overlap(used, covered)
       if (score === 0) continue
+      const named = [...conceptsTaughtBy(candidate.rule)].filter((id) => atIssue.has(id)).length
+      if (onlyNaming && named === 0) continue
       const unrelated = [...covered].filter((family) => !used.has(family) && !extra.has(family)).length
-      if (score > bestScore || (score === bestScore && unrelated < bestUnrelated)) {
-        best = { candidate, diagnostic }
+      const better = score > bestScore || (score === bestScore &&
+        (named > bestNamed || (named === bestNamed && unrelated < bestUnrelated)))
+      if (better) {
+        best = { candidate, diagnostic, named }
         bestScore = score
+        bestNamed = named
         bestUnrelated = unrelated
       }
     }
     return best
   }
 
-  const current = pickBest(candidates.filter((candidate) => candidate.isCurrentLevel))
+  const currentPool = candidates.filter((candidate) => candidate.isCurrentLevel)
+  const earlierPool = candidates.filter((candidate) => !candidate.isCurrentLevel)
+  if (written && atIssue.size > 0) {
+    const naming = pickBest(currentPool, true) ?? pickBest(earlierPool, true)
+    if (naming) return naming.candidate
+  }
+  const current = pickBest(currentPool)
   const hasSpecificMistake = missing.size > 0 || extra.size > 0
   if (current && (current.diagnostic > 0 || !hasSpecificMistake)) return current.candidate
-  const earlier = pickBest(candidates.filter((candidate) => !candidate.isCurrentLevel))
+  const earlier = pickBest(earlierPool)
   if (earlier && earlier.diagnostic > (current?.diagnostic ?? 0)) return earlier.candidate
   return current?.candidate ?? earlier?.candidate ?? null
 }

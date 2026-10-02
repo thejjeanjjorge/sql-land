@@ -45,7 +45,7 @@ export const LEVELS: Level[] = [
     rules: [
       {
         title: 'Ask for columns',
-        body: 'SELECT names the columns you want. FROM names the table they come from.',
+        body: 'SELECT names the columns you want, separated by commas. FROM names the table they come from.',
         example: 'SELECT name, price FROM products;',
       },
       {
@@ -55,8 +55,8 @@ export const LEVELS: Level[] = [
       },
       {
         title: 'Build one clause at a time',
-        body: 'Start with SELECT, add FROM, then end the statement with a semicolon.',
-        example: 'SELECT id, status FROM orders;',
+        body: 'Start with SELECT, add FROM, then end the statement with a semicolon. Later you will add WHERE after FROM to keep only the rows you want.',
+        example: 'SELECT id, status FROM orders WHERE id = 1;',
       },
     ],
     exercises: [
@@ -248,13 +248,13 @@ export const LEVELS: Level[] = [
       },
       {
         title: 'Combine conditions',
-        body: 'AND requires both conditions to be true. Comparisons such as >= work with numbers and dates.',
+        body: 'AND requires both conditions to be true. Comparisons work with numbers and dates: <, <=, >, >= and <> (not equal).',
         example: "SELECT id FROM orders WHERE status = 'shipped' AND order_date >= '2026-01-10';",
       },
       {
         title: 'Sort with ORDER BY',
-        body: 'ASC sorts low to high; DESC sorts high to low. ORDER BY comes after WHERE.',
-        example: 'SELECT name, price FROM products ORDER BY price DESC;',
+        body: 'ASC sorts low to high; DESC sorts high to low. Add more columns after commas to break ties. ORDER BY comes after WHERE.',
+        example: 'SELECT name, price FROM products ORDER BY price DESC, name ASC;',
       },
     ],
     exercises: [
@@ -461,13 +461,13 @@ export const LEVELS: Level[] = [
     skills: ['aggregate'],
     rules: [
       {
-        title: 'Count and add',
-        body: 'COUNT(*) counts rows. SUM adds the values in a numeric column.',
-        example: 'SELECT COUNT(*) AS order_count FROM orders;',
+        title: 'Summarize many rows',
+        body: 'COUNT(*) counts rows; COUNT(column) counts rows where that column has a value. SUM adds a numeric column and AVG averages it. MIN and MAX find the smallest and largest value. Use AS to name each result.',
+        example: 'SELECT COUNT(*) AS payment_count,\n       SUM(amount) AS total_paid,\n       AVG(amount) AS avg_paid,\n       MIN(amount) AS smallest,\n       MAX(amount) AS largest\nFROM payments;',
       },
       {
         title: 'Make groups',
-        body: 'GROUP BY creates one result per distinct group. Select the grouped column alongside the total.',
+        body: 'Without GROUP BY, an aggregate summarizes the whole table into one row. GROUP BY creates one result per distinct group. Any plain column you select beside an aggregate belongs in GROUP BY. Different rows can share a name, so include the unique ID when each one needs its own result.',
         example: 'SELECT status, COUNT(*) AS order_count FROM orders GROUP BY status;',
       },
       {
@@ -672,7 +672,7 @@ export const LEVELS: Level[] = [
     rules: [
       {
         title: 'Match related keys',
-        body: 'JOIN connects rows where a foreign key equals its matching primary key.',
+        body: 'JOIN connects rows from two tables. ON states the match: a foreign key equals its matching primary key.',
         example: 'SELECT o.id, c.name FROM orders AS o JOIN customers AS c ON o.customer_id = c.id;',
       },
       {

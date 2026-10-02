@@ -8,6 +8,16 @@ The schema and sample data live in `fixtures.ts`. Both exported SQL strings are 
 
 Comparisons need boundary rows. For `write`, `fix`, `bug`, and `refactor` questions, the validator flips each `<`, `<=`, `>`, and `>=` in `solutionSql` (`<` becomes `<=`, and so on) and fails if the result stays the same in both fixtures, because an off-by-one answer would then pass. When that happens, add a row to the challenge fixture that sits exactly on the threshold: a product priced exactly 10.00 for `price < 10`, a shipment at midnight on the first of the next month for a month range, or a row equal to the average for `> (SELECT AVG(...))`. The boundary block at the end of the challenge fixture explains the rows already there; adding rows changes those averages, so recheck them.
 
-After changing the content, run `node src/content/validate.mjs`. It checks the level structure, reference queries, and choice answers against both PostgreSQL fixtures.
+Teach before you test. A question may only use SQL that a rule card has already taught, in its own level or an earlier one. Teaching means three things, and the validator checks each:
+
+- **Name it.** The card's title, body, or example mentions the function, clause, or operator (`AVG`, `LEFT JOIN`, `<>`). A hint or explanation does not count, because the exam shows neither.
+- **Show it.** Some card example demonstrates the syntax, so it is not left to guesswork: `BETWEEN 10 AND 30`, `x::numeric`, `NOT IN (SELECT ...)`. Comparison operators, `NOT`, and `COUNT(column)` are exempt, because their card spells them out in words.
+- **Write functions in call form.** A card that says "NULLIF turns equal values into NULL" never shows the arguments; `NULLIF(a, b)` does. Every function a question calls, such as `ROW_NUMBER()`, `LEAD(...)`, or `left(text, n)`, must appear that way on some card.
+
+The validator cannot judge an idea, only syntax. A question can still need something no keyword reveals: that a condition on the right-hand table belongs in `ON`, that a window result must be filtered from a subquery, that dividing two integers drops the fraction. When you write a question around an idea like that, put the idea on a card in the same level or earlier. Aggregates do not always need `GROUP BY`: without it they summarize the whole table into one row, and the "Make groups" card says that a plain column selected beside an aggregate belongs in `GROUP BY`.
+
+The "Rule to remember" card shown after a wrong answer is picked by `ruleMatcher.ts`. When the learner wrote SQL, it prefers a card that names the concept they got wrong, so put a new concept on the card where it fits instead of adding a card that repeats an old one. Be careful with incidental words: the matcher reads a card's text, so the word "SELECT" or a mention of `COUNT` in a card about something else pulls unrelated questions toward it.
+
+After changing the content, run `node src/content/validate.mjs`. It checks the level structure, reference queries, and choice answers against both PostgreSQL fixtures. It also fails, and lists the questions, when one needs SQL that the cards have not taught. The concepts are the ones in `ruleMatcher.ts`, and the check reads each question's `solutionSql` and `starterSql`.
 
 To add an entirely separate topic pack later, create another content module with its own levels and fixtures, then register that pack in the app's content selector. Do not mix its data or progression IDs into this shop pack.

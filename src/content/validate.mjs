@@ -152,6 +152,7 @@ const [
   { compareResults, scalarAnswerEqual },
   { constraintError },
   { cartesianCombinations, instantiateExercise },
+  { conceptsTaughtBy, conceptsUsedBy },
 ] = await Promise.all([
   loadTypeScript('levels.ts'),
   loadTypeScript('advancedLevels.ts'),
@@ -159,9 +160,71 @@ const [
   loadTypeScript('../engine/compare.ts'),
   loadTypeScript('../engine/sqlConstraints.ts'),
   loadTypeScript('parameterize.ts'),
+  loadTypeScript('ruleMatcher.ts'),
 ]);
 
 const LEVELS = [...FOUNDATION_LEVELS, ...ADVANCED_LEVELS];
+
+/** Words that can sit before a parenthesis without being a function call. */
+const NOT_FUNCTIONS = new Set(['IN', 'EXISTS', 'VALUES', 'OVER', 'FILTER', 'AS', 'ON', 'USING', 'AND', 'OR', 'NOT', 'WHERE',
+  'FROM', 'SELECT', 'WITH', 'JOIN', 'UNION', 'INTERSECT', 'EXCEPT', 'HAVING', 'BY', 'LIMIT', 'BETWEEN', 'ANY', 'ALL', 'SOME',
+  'LATERAL', 'RECURSIVE', 'WHEN', 'THEN', 'ELSE', 'CASE', 'END', 'IS', 'NULL', 'DISTINCT', 'LIKE', 'ILIKE', 'ROWS', 'RANGE',
+  'PARTITION', 'ORDER', 'GROUP', 'SET']);
+
+/** Function names a query calls. Names the query defines itself, such as n(x) in a CTE, are not calls. */
+function functionCalls(sql) {
+  const text = sql.replace(/--[^\n]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/'(?:[^']|'')*'/g, "''").toUpperCase();
+  const own = new Set();
+  for (const match of text.matchAll(/\bWITH\s+(?:RECURSIVE\s+)?(\w+)/g)) own.add(match[1]);
+  for (const match of text.matchAll(/\)\s*,\s*(\w+)\s*(?:\([^)]*\))?\s+AS\s*\(/g)) own.add(match[1]);
+  for (const match of text.matchAll(/\)\s+(?:AS\s+)?(\w+)\s*\(/g)) own.add(match[1]);
+  return [...text.matchAll(/\b([A-Z_][A-Z0-9_]*)\s*\(/g)]
+    .map((match) => match[1])
+    .filter((name) => !NOT_FUNCTIONS.has(name) && !own.has(name));
+}
+
+/** Operators and keywords whose card states what they mean in words, so an example would add nothing. */
+const SELF_EXPLAINING = new Set(['lt', 'lte', 'gt', 'gte', 'ne', 'not', 'countColumn']);
+
+/**
+ * Teach before you test. A learner may be asked to write or read only SQL that a rule
+ * card has already named, in the question's own level or an earlier one:
+ * - every concept must be named by a card (title, body or example);
+ * - every concept must also be shown in a card's example, so the syntax is not left to
+ *   guesswork (comparison operators and the like are exempt: the card spells them out);
+ * - every function must be written out in call form, such as NULLIF(a, b) or left(text, n),
+ *   because a card that only says "NULLIF turns equal values into NULL" never shows the arguments.
+ * Hints and explanations do not count as teaching: the exam shows neither.
+ */
+function untaughtProblems() {
+  const named = new Set();
+  const shown = new Set();
+  const calls = new Set();
+  const problems = [];
+  for (const level of LEVELS) {
+    for (const rule of level.rules) {
+      for (const id of conceptsTaughtBy(rule)) named.add(id);
+      if (rule.example) for (const id of conceptsUsedBy(rule.example)) shown.add(id);
+      const text = `${rule.title} ${rule.body} ${rule.example ?? ''}`;
+      for (const match of text.matchAll(/\b([A-Za-z_]\w*)\s*\(/g)) calls.add(match[1].toUpperCase());
+    }
+    for (const exercise of [...level.exercises, ...level.exam]) {
+      const sqls = [exercise.solutionSql, exercise.starterSql].filter(Boolean);
+      for (const id of new Set(sqls.flatMap((sql) => [...conceptsUsedBy(sql)]))) {
+        if (!named.has(id)) problems.push(`${exercise.id} uses "${id}", which no rule card names yet`);
+        else if (!shown.has(id) && !SELF_EXPLAINING.has(id)) problems.push(`${exercise.id} uses "${id}", which no rule example shows yet`);
+      }
+      for (const name of new Set(sqls.flatMap(functionCalls))) {
+        if (!calls.has(name)) problems.push(`${exercise.id} calls ${name}(), which no rule card writes out in call form yet`);
+      }
+    }
+  }
+  return problems;
+}
+
+const untaught = untaughtProblems();
+expect(untaught.length === 0,
+  `Questions use SQL that the rule cards through their level have not taught. Name it in a card's title, body or example, show it in an example, or rewrite the question. Concept ids are listed in ruleMatcher.ts:\n  ${untaught.join('\n  ')}`);
 
 const fixtures = [BASE_SEED_SQL, CHALLENGE_SEED_SQL];
 const seenIds = new Set();
