@@ -8,7 +8,7 @@
     "dev": "vite --configLoader runner",
     "build": "tsc -b && vite build --configLoader runner",
     "preview": "vite preview --configLoader runner",
-    "test": "node --test src/engine/compare.test.mjs src/progress.test.mjs src/content/parameterize.test.mjs src/content/ruleMatcher.test.mjs && node src/content/validate.mjs"
+    "test": "node --test src/engine/compare.test.mjs src/progress.test.mjs src/content/parameterize.test.mjs src/content/ruleMatcher.test.mjs && node src/content/validate.mjs && motion-for-agents-validate motion.plan.json"
   },
   "dependencies": {
     "@codemirror/lang-sql": "^6.10.0",
@@ -16,7 +16,7 @@
     "@codemirror/view": "^6.43.13",
     "@electric-sql/pglite": "^0.3.14",
     "@lezer/highlight": "^1.2.5",
-    "@motion-for-agents/react": "github:thejjeanjjorge/motion-for-agents#785e790d241815e66aa8b838cdf6b86a855fa108",
+    "@motion-for-agents/react": "github:thejjeanjjorge/motion-for-agents#ebfd4cd7409c9bbb9c03a25009ef1c1985d26c28",
     "@uiw/react-codemirror": "^4.23.13",
     "lucide-react": "^0.468.0",
     "motion": "^13.5.1",

@@ -71,7 +71,8 @@
       "intent": "reveal",
       "target": "Trophy on the exam result card",
       "trigger": "The exam result card shows a passed level",
-      "component": "MotionReveal"
+      "component": "MotionReveal",
+      "preset": "celebration"
     },
     {
       "id": "primary-actions",
@@ -83,16 +84,15 @@
     {
       "id": "level-passed-celebration",
       "intent": "celebrate",
-      "target": "Sidebar progress footer",
-      "trigger": "passedCount increases while the sidebar is mounted, after a level exam is passed",
+      "target": "Trophy on the exam result card",
+      "trigger": "The result view opens after a newly passed level; previousTrigger holds the count from before the exam",
       "component": "MotionCelebration"
     }
   ],
   "notes": [
-    "The trophy reveal overrides the preset with celebration; the v1 plan format has no per-transition preset field.",
     "The CodeMirror editor and the query results table are not animated, so typing and query output stay immediate.",
     "The page-level MotionSwitch key ignores question changes, so the schema panel keeps its open table while practicing.",
-    "Outgoing pages are made inert while they exit so a double click cannot run a page action twice.",
-    "The sidebar footer is hidden below 900px wide, so phones and tablets get the trophy reveal without particles."
+    "MotionSwitch makes the outgoing page inert while it exits, so a double click cannot run a page action twice.",
+    "Retaking the exam of a level that is already passed shows the trophy without a burst."
   ]
 }

@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { useIsPresent } from 'motion/react'
+import { useEffect, useState } from 'react'
 import {
   MotionButton, MotionCelebration, MotionProgress, MotionReveal, MotionSwitch,
 } from '@motion-for-agents/react'
@@ -233,16 +232,6 @@ function statusForSkill(progress: Progress, skill: SkillId) {
   }[status]
 }
 
-/**
- * MotionSwitch keeps the outgoing page on screen while it fades out. Making it inert
- * stops a quick second click from running that page's action twice (for example,
- * counting one exam as two attempts).
- */
-function ExitGuard({ children }: { children: ReactNode }) {
-  const isPresent = useIsPresent()
-  return <div inert={!isPresent}>{children}</div>
-}
-
 function LevelIcon({ level, passed, locked }: { level: Level; passed: boolean; locked: boolean }) {
   return <span className={`level-icon ${passed ? 'passed' : locked ? 'locked' : 'active'}`}>
     {passed ? <Check size={21} /> : locked ? <LockKeyhole size={19} /> : <span>{String(level.number).padStart(2, '0')}</span>}
@@ -259,7 +248,12 @@ function App() {
   const [examIndex, setExamIndex] = useState(0)
   const [examQuestions, setExamQuestions] = useState<Exercise[]>([])
   const [examAnswers, setExamAnswers] = useState<ExamAnswer[]>([])
-  const [examResult, setExamResult] = useState<{ score: number; passed: boolean } | null>(null)
+  const [examResult, setExamResult] = useState<{
+    score: number
+    passed: boolean
+    /** Levels passed before this attempt, so the result view celebrates only a new pass. */
+    levelsPassedBefore: number
+  } | null>(null)
   const [examRound, setExamRound] = useState(0)
   const [isMixedReview, setIsMixedReview] = useState(false)
   const [reviewSkill, setReviewSkill] = useState<SkillId>('select')
@@ -375,7 +369,7 @@ function App() {
         passedLevelIds: passed && !current.passedLevelIds.includes(selectedLevel.id)
           ? [...current.passedLevelIds, selectedLevel.id] : current.passedLevelIds,
       }))
-      setExamResult({ score, passed })
+      setExamResult({ score, passed, levelsPassedBefore: passedCount })
       setPhase('examResults')
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -628,8 +622,11 @@ function App() {
       <div className="lesson-breadcrumb"><button type="button" onClick={() => setView('home')}><ArrowLeft size={16} /> Learning path</button><ChevronRight size={16} /><span>Exam result</span></div>
       <div className={`exam-result-card ${examResult.passed ? 'success' : 'retry'}`}>
         {examResult.passed ? (
-          // Passing a level is a rare milestone, so the trophy gets the livelier preset.
-          <MotionReveal preset="celebration" className="exam-icon"><Trophy size={35} /></MotionReveal>
+          // Passing a level is a rare milestone, so the trophy gets the livelier preset. This
+          // view opens because of the pass, so previousTrigger lets it burst once as it appears.
+          <MotionCelebration trigger={passedCount} previousTrigger={examResult.levelsPassedBefore}>
+            <MotionReveal preset="celebration" className="exam-icon"><Trophy size={35} /></MotionReveal>
+          </MotionCelebration>
         ) : (
           <span className="exam-icon"><RotateCcw size={33} /></span>
         )}
@@ -843,9 +840,7 @@ function App() {
       <nav className="main-nav" aria-label="Main navigation"><button type="button" className={view === 'home' || view === 'lesson' ? 'active' : ''} onClick={() => setView('home')}><LayoutDashboard size={19} /> Learning path</button><button type="button" className={view === 'review' || view === 'reviewSession' ? 'active' : ''} onClick={() => setView('review')}><RotateCcw size={19} /> Review skills</button></nav>
       <div className="sidebar-label levels-label">YOUR LEVELS</div>
       <div className="sidebar-levels">{LEVELS.map((level) => { const locked = isLocked(level); const passed = progress.passedLevelIds.includes(level.id); return <button type="button" key={level.id} className={view === 'lesson' && selectedLevel.id === level.id ? 'current' : ''} disabled={locked} onClick={() => openLevel(level)}><span className={`sidebar-level-number ${passed ? 'done' : ''}`}>{passed ? <Check size={14} /> : locked ? <LockKeyhole size={13} /> : level.number}</span><span>{level.title}</span></button> })}</div>
-      {/* The sidebar stays mounted, so passedCount only rises when a level is newly passed.
-          Saved progress on page load never fires the burst. */}
-      <MotionCelebration trigger={passedCount} className="sidebar-footer">
+      <div className="sidebar-footer">
         <div className="sidebar-progress-top"><span>Your progress</span><strong>{Math.round(passedPercent)}%</strong></div>
         <MotionProgress
           value={passedPercent}
@@ -854,14 +849,13 @@ function App() {
           fillClassName="sidebar-progress-fill"
         />
         <p>{passedCount} of {LEVELS.length} levels passed</p>
-      </MotionCelebration>
+      </div>
     </aside>
     <div className="main-column">
       <header className="topbar"><span><span className="topbar-dot" /> Learn at your own pace</span><span className="saved-indicator"><CheckCircle2 size={16} /> Progress saved on this device</span></header>
       <main className="page-content">
-        <MotionSwitch transitionKey={pageKey}>
-          <ExitGuard>{renderPage()}</ExitGuard>
-        </MotionSwitch>
+        {/* The outgoing page is inert while it fades out, so a double click cannot repeat its action. */}
+        <MotionSwitch transitionKey={pageKey}>{renderPage()}</MotionSwitch>
       </main>
       <footer className="app-footer"><span>SQL Land · a little practice goes a long way</span><span><CircleHelp size={15} /> PostgreSQL practice</span></footer>
     </div>

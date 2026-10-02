@@ -61,9 +61,9 @@ The app code is in `src/App.tsx`, the reusable question interface in `src/Questi
 
 ## Motion
 
-Transitions and feedback use [Motion for Agents](https://github.com/thejjeanjjorge/motion-for-agents), installed from GitHub at a pinned commit, with its Quiet preset. Pages and rule cards slide between steps, new questions and help fade in, check results animate as status messages, progress bars fill smoothly, and passing a level sends a short burst over the sidebar progress. The SQL editor and query results are never animated, so typing and output stay immediate.
+Transitions and feedback use [Motion for Agents](https://github.com/thejjeanjjorge/motion-for-agents), installed from GitHub at a pinned commit, with its Quiet preset. Pages and rule cards slide between steps, new questions and help fade in, check results animate as status messages, progress bars fill smoothly, and passing a level lifts in a trophy with a short burst. The SQL editor and query results are never animated, so typing and output stay immediate.
 
-With the system's reduced-motion setting on, only short fades remain, and progress bars change without animating. [`motion.plan.json`](motion.plan.json) lists each animated boundary and what triggers it.
+With the system's reduced-motion setting on, only short fades remain, and progress bars change without animating. [`motion.plan.json`](motion.plan.json) lists each animated boundary and what triggers it; `npm test` checks it with the kit's validator.
 
 ## Credits
 
