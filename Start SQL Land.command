@@ -20,8 +20,8 @@ if ! command -v node >/dev/null 2>&1; then
   pause_and_exit 1
 fi
 
-if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=12)||(a===20&&b>=19)?0:1)"; then
-  echo "SQL Land needs Node.js 20.19 or newer. This computer has $(node --version)."
+if ! node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=12)?0:1)"; then
+  echo "SQL Land needs Node.js 22.12 or newer. This computer has $(node --version)."
   echo "Opening https://nodejs.org - install the LTS version, then double-click this file again."
   open https://nodejs.org
   pause_and_exit 1

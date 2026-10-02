@@ -14,7 +14,7 @@ A local-first PostgreSQL practice app. Work through short rule cards, solve vari
 
 ## Run your own copy
 
-1. Install [Node.js](https://nodejs.org) (the LTS version, 20.19 or newer).
+1. Install [Node.js](https://nodejs.org) (the LTS version, 22.12 or newer).
 2. Download this repo: the green **Code** button → **Download ZIP**, then unzip it. Or use `git clone`.
 3. Double-click the launcher in the folder:
    - **Windows:** `Start SQL Land.bat`

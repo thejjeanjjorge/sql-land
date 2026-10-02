@@ -6,7 +6,7 @@ cd /d "%~dp0"
 where node >nul 2>nul
 if errorlevel 1 goto no_node
 
-node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=12)||(a===20&&b>=19)?0:1)"
+node -e "const [a,b]=process.versions.node.split('.').map(Number);process.exit(a>22||(a===22&&b>=12)?0:1)"
 if errorlevel 1 goto old_node
 
 node -e "fetch('http://localhost:5173/').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
@@ -46,7 +46,7 @@ exit /b 1
 
 :old_node
 for /f "delims=" %%v in ('node --version') do set NODE_VERSION=%%v
-echo SQL Land needs Node.js 20.19 or newer. This computer has %NODE_VERSION%.
+echo SQL Land needs Node.js 22.12 or newer. This computer has %NODE_VERSION%.
 echo Opening https://nodejs.org - install the LTS version, then double-click this file again.
 start "" https://nodejs.org
 pause
